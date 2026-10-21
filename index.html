@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Muhurat</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Nunito:wght@500;700&display=swap">
+<style>
+/* Concept: the day is a horizon strip, sunrise to sunset. Windows are weather on that strip. The sun lands on the one window. Everything else is quiet. */
+:root{--bg:#eef4fb;--fg:#17202b;--muted:#5f6c7b;--card:#ffffff;--rule:#d7e0ea;
+ --sun:#f4b63f;--sunline:#c98a12;--haze:#cfd8e3;--dusk:#b89ccb;--sky:#dcecfb;--pin:#17202b;
+ --yes:#1f7a4d;--no:#b9452f;--block:#8a6a1e;
+ --display:"Bricolage Grotesque","Nunito",system-ui,sans-serif;--body:"Nunito",system-ui,sans-serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#101722;--fg:#eef3f8;--muted:#9aa8b8;--card:#18212e;--rule:#2a3645;
+ --sun:#f6c04f;--sunline:#f6c04f;--haze:#2c3847;--dusk:#5e4a75;--sky:#1e2c3f;--pin:#eef3f8;--yes:#7fd3a3;--no:#ef9a86;--block:#e0bd62;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#101722;--fg:#eef3f8;--muted:#9aa8b8;--card:#18212e;--rule:#2a3645;
+ --sun:#f6c04f;--sunline:#f6c04f;--haze:#2c3847;--dusk:#5e4a75;--sky:#1e2c3f;--pin:#eef3f8;--yes:#7fd3a3;--no:#ef9a86;--block:#e0bd62;color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:17px;line-height:1.4;padding-block:20px;
+ padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+main{max-width:620px;margin:0 auto;display:flex;flex-direction:column;gap:22px}
+header{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+h1{font-family:var(--display);font-weight:700;font-size:28px;margin:0;letter-spacing:-.01em}
+.day{font-family:var(--display);font-weight:500;color:var(--muted);font-size:17px}
+.day input{border:0;background:none;color:inherit;font:inherit;padding:0;width:auto;cursor:pointer}
+/* answer */
+.answer{display:flex;flex-direction:column;gap:6px}
+.big{font-family:var(--display);font-weight:700;font-size:clamp(34px,8vw,52px);line-height:1.02;letter-spacing:-.02em;text-wrap:balance;margin:0}
+.big em{font-style:normal}
+.YES .big em{color:var(--yes)}.NO .big em{color:var(--no)}.BLOCK .big em{color:var(--block)}
+.sub{color:var(--muted);margin:0;font-size:16px}
+details{color:var(--muted);font-size:15px}
+summary{cursor:pointer;width:max-content}
+/* strip */
+.strip{position:relative;height:64px;border-radius:14px;overflow:hidden;background:var(--sky)}
+.strip .band{position:absolute;top:0;bottom:0}
+.band.y{background:var(--haze)}
+.band.r{background:var(--dusk)}
+.strip .ab{position:absolute;top:0;bottom:0;background:repeating-linear-gradient(90deg,transparent 0 4px,rgba(244,182,63,.35) 4px 8px)}
+.strip .pin{position:absolute;top:8px;bottom:8px;background:var(--pin);opacity:.85;border-radius:4px;min-width:4px}
+.strip .pin.prot{background:var(--yes)}
+.strip .best{position:absolute;top:6px;bottom:6px;border-radius:8px;border:3px solid var(--sunline);background:rgba(244,182,63,.25);transition:left .4s cubic-bezier(.3,1.4,.5,1),width .4s}
+.sun{position:absolute;top:-10px;width:22px;height:22px;border-radius:50%;background:var(--sun);box-shadow:0 0 0 6px rgba(244,182,63,.25);transform:translateX(-50%);transition:left .4s cubic-bezier(.3,1.4,.5,1)}
+@media (prefers-reduced-motion:reduce){.strip .best,.sun{transition:none}}
+.ticks{display:flex;justify-content:space-between;color:var(--muted);font-size:13px;margin-top:6px;font-variant-numeric:tabular-nums}
+.legend{display:flex;gap:14px;flex-wrap:wrap;color:var(--muted);font-size:13px;margin-top:4px}
+.legend span::before{content:"";display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.legend .l-sky::before{background:var(--sky);border:1px solid var(--rule)}.legend .l-y::before{background:var(--haze)}.legend .l-r::before{background:var(--dusk)}.legend .l-ab::before{background:var(--sun)}
+/* input */
+h2{font-family:var(--display);font-weight:500;font-size:19px;margin:0 0 10px}
+.seg{display:inline-flex;background:var(--card);border:1px solid var(--rule);border-radius:999px;padding:3px;gap:2px}
+.seg button{border:0;background:none;color:var(--muted);font:inherit;font-weight:700;padding:7px 14px;border-radius:999px;cursor:pointer}
+.seg button[aria-pressed=true]{background:var(--fg);color:var(--bg)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1px solid var(--rule);background:var(--card);color:var(--fg);font:inherit;font-weight:700;padding:9px 14px;border-radius:999px;cursor:pointer}
+.chip:hover{border-color:var(--fg)}
+.list{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+.item{display:grid;grid-template-columns:1fr auto auto auto;gap:8px;align-items:center;background:var(--card);border:1px solid var(--rule);border-radius:12px;padding:8px 8px 8px 14px}
+.item .t{font-weight:700;min-width:0;overflow-wrap:anywhere}
+.item .t small{display:block;color:var(--muted);font-weight:500;font-size:13px}
+.item input[type=time]{border:1px solid var(--rule);background:var(--bg);color:var(--fg);font:inherit;border-radius:8px;padding:6px 8px;width:96px}
+.item .x{border:0;background:none;color:var(--muted);font-size:22px;line-height:1;width:36px;height:36px;cursor:pointer;border-radius:50%}
+.item .x:hover{background:var(--bg)}
+.flags{grid-column:1 / -1;display:flex;gap:6px}
+.flag{border:1px solid var(--rule);background:none;color:var(--muted);font:inherit;font-size:13px;padding:4px 10px;border-radius:999px;cursor:pointer}
+.flag[aria-pressed=true]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.row input[type=text]{flex:1;min-width:160px;border:1px solid var(--rule);background:var(--card);color:var(--fg);font:inherit;border-radius:999px;padding:9px 14px}
+button:focus-visible,input:focus-visible{outline:2px solid var(--sunline);outline-offset:2px}
+footer{color:var(--muted);font-size:13px;line-height:1.5}
+@media (max-width:460px){.item{grid-template-columns:1fr auto auto}.item .x{grid-row:1;grid-column:3}.item input[type=time]{width:84px}}
+/* wall mode: answer and strip only, readable across a room */
+body.wall main{max-width:1000px;gap:34px;padding-top:4vh}
+body.wall .ask,body.wall footer,body.wall details{display:none}
+body.wall h1{font-size:34px}body.wall .day{font-size:26px}
+body.wall .big{font-size:clamp(48px,8.5vw,110px)}
+body.wall .sub{font-size:clamp(20px,2.8vw,34px)}
+body.wall .strip{height:120px;border-radius:24px}
+body.wall .sun{width:34px;height:34px;top:-14px}
+body.wall .ticks,body.wall .legend{font-size:18px}
+</style>
+</head><body>
+<main>
+<header>
+  <h1>Muhurat</h1>
+  <div class="day"><input type="date" id="date" aria-label="day"></div>
+</header>
+
+<section class="answer" id="answer" aria-live="polite">
+  <p class="big" id="big">Add what cannot move. The sun finds your window.</p>
+  <p class="sub" id="sub"></p>
+  <details id="more"><summary>backup and why</summary><div id="moret"></div></details>
+</section>
+
+<section>
+  <div class="strip" id="strip"><div class="sun" id="sun" hidden></div></div>
+  <div class="ticks"><span id="t0">07:00</span><span id="t1">12:00</span><span id="t2">17:00</span></div>
+  <div class="legend"><span class="l-sky">open</span><span class="l-y">routine only</span><span class="l-r">Rahu Kalam, nothing new</span><span class="l-ab">Abhijit, best</span></div>
+</section>
+
+<section class="ask">
+  <h2>How long do you need?</h2>
+  <div class="seg" id="mins" role="group"><button type="button" data-v="30">30 min</button><button type="button" data-v="60" aria-pressed="true">1 hour</button><button type="button" data-v="90">1.5 h</button></div>
+</section>
+
+<section class="ask">
+  <h2>What cannot move today?</h2>
+  <div class="chips" id="chips"></div>
+  <form class="row" id="custom" style="margin-top:8px"><input type="text" id="ctitle" placeholder="something else" aria-label="something else"><button type="submit" class="chip">add</button></form>
+  <div class="list" id="list"></div>
+</section>
+
+<footer>Stockholm daylight. Vedic day windows by pure maths. Travel adds 45 minutes each side. Protected time is never booked over. Nothing leaves this screen. Fridge mode: add #wall to the address.</footer>
+</main>
+<script src="ranker.js"></script>
+<script>
+const $=id=>document.getElementById(id);
+const todayISO=()=>{const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")};
+const PRESETS=[["School drop","08:00","08:30",1,0],["School pickup","15:00","15:30",1,0],["Nap","13:00","14:00",0,1],["Lunch","12:00","12:45",0,1],["Dentist","10:30","11:00",1,0],["Gym","17:00","18:00",1,1],["Family dinner","18:00","19:00",0,1],["Me time","20:00","21:00",0,1]];
+let WIN={},items=[],mins=60;
+const KEY=d=>"muhurat:"+d;
+const load=d=>{try{return JSON.parse(localStorage.getItem(KEY(d))||"null")||[]}catch(e){return[]}};
+const save=d=>{try{localStorage.setItem(KEY(d),JSON.stringify(items))}catch(e){}};
+function chips(){$("chips").innerHTML="";PRESETS.forEach(p=>{const b=document.createElement("button");b.type="button";b.className="chip";b.textContent=p[0];b.onclick=()=>{items.push({title:p[0],start:p[1],end:p[2],away:!!p[3],protect:!!p[4]});render()};$("chips").appendChild(b)})}
+function list(){
+  const L=$("list");L.innerHTML="";
+  items.forEach((it,i)=>{
+    const d=document.createElement("div");d.className="item";
+    d.innerHTML=`<div class="t">${it.title}<small>${it.away?"away, 45 min each side":""}${it.away&&it.protect?" · ":""}${it.protect?"protected":""}</small></div>
+      <input type="time" value="${it.start}" aria-label="from"><input type="time" value="${it.end}" aria-label="to"><button class="x" aria-label="remove">×</button>
+      <div class="flags"><button type="button" class="flag" aria-pressed="${it.away}">away from home</button><button type="button" class="flag" aria-pressed="${it.protect}">protect it</button></div>`;
+    const [s,e]=d.querySelectorAll("input");s.onchange=()=>{it.start=s.value;render()};e.onchange=()=>{it.end=e.value;render()};
+    d.querySelector(".x").onclick=()=>{items.splice(i,1);render()};
+    const [fa,fp]=d.querySelectorAll(".flag");fa.onclick=()=>{it.away=!it.away;render()};fp.onclick=()=>{it.protect=!it.protect;render()};
+    L.appendChild(d)});
+}
+function pct(t,day){const [r,s]=[M(day.rise),M(day.set)];const lo=Math.min(r,7*60),hi=Math.max(s,17*60);return ((M(t)-lo)/(hi-lo)*100)};
+function strip(day,r){
+  const S=$("strip");S.querySelectorAll(".band,.ab,.pin,.best").forEach(n=>n.remove());
+  const add=(cls,a,b)=>{const n=document.createElement("div");n.className=cls;n.style.left=pct(a,day)+"%";n.style.width=Math.max(.6,pct(b,day)-pct(a,day))+"%";S.insertBefore(n,$("sun"));return n};
+  day.seg.forEach(([a,b,t])=>{if(t!=="g")add("band "+t,a,b)});
+  if(day.ab)add("ab",day.ab[0],day.ab[1]);
+  items.filter(i=>i.start&&i.end).forEach(i=>add("pin"+(i.protect?" prot":""),i.start,i.end).title=i.title);
+  const lo=Math.min(M(day.rise),7*60),hi=Math.max(M(day.set),17*60);$("t0").textContent=T(lo);$("t1").textContent=T(Math.round((lo+hi)/2));$("t2").textContent=T(hi);
+  const sun=$("sun");
+  if(r&&r.best){const m=r.best.match(/(\d\d:\d\d) to (\d\d:\d\d)/);add("best",m[1],m[2]);sun.hidden=false;sun.style.left=((pct(m[1],day)+pct(m[2],day))/2)+"%"}else sun.hidden=true;
+}
+function render(){
+  const d=$("date").value,day=WIN[d];list();save(d);
+  if(!day){$("big").textContent="That day is outside the computed year.";return}
+  const r=rank(day,items,mins,null);
+  $("answer").className="answer "+r.verdict;
+  if(!items.length){$("big").innerHTML=r.best?`Open day. Best bet <em>${r.best.replace(/ \(.*\)/,"")}</em>.`:"Add what cannot move.";$("sub").textContent=r.avoid?"Rahu Kalam "+r.avoid.replace(" (Rahu Kalam)","")+", routine only.":"";}
+  else if(r.verdict==="YES"){$("big").innerHTML=`Take <em>${r.best.replace(/ \(.*\)/,"")}</em>.`;$("sub").textContent=(r.best.includes("Abhijit")?"That is Abhijit, the strongest window of the day. ":"")+(r.avoid?"Skip "+r.avoid.replace(" (Rahu Kalam)","")+".":"")}
+  else{$("big").innerHTML=`<em>No room</em> for ${mins} min today.`;$("sub").textContent=r.reason}
+  $("moret").textContent=(r.backup?"Backup: "+r.backup+". ":"")+r.why+(r.fixed.length?" Fixed and never moved: "+r.fixed.join("; ")+".":"");
+  $("more").hidden=!items.length;
+  strip(day,r);
+}
+function init(){
+  $("date").value=todayISO();items=load(todayISO());chips();
+  $("mins").onclick=e=>{const b=e.target.closest("button");if(!b)return;mins=+b.dataset.v;[...$("mins").children].forEach(c=>c.setAttribute("aria-pressed",c===b));render()};
+  $("custom").onsubmit=e=>{e.preventDefault();const t=$("ctitle").value.trim();if(!t)return;items.push({title:t,start:"10:00",end:"11:00",away:false,protect:false});$("ctitle").value="";render()};
+  $("date").onchange=()=>{items=load($("date").value);render()};
+  fetch("windows.json").then(r=>r.json()).then(w=>{WIN=w;if(location.hash==="#wall"){document.body.classList.add("wall");setInterval(()=>{if($("date").value!==todayISO()){$("date").value=todayISO();items=load(todayISO())}render()},60000)}render()})
+  .catch(()=>{$("big").textContent="Could not load the day windows."});
+}
+init();
+</script>
+</body></html>
